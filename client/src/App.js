@@ -7,7 +7,8 @@ import { GoogleLogin } from 'react-google-login';
 
 
 class App extends Component {
-    state = {users: [], email: "", password: ""}
+    state = {users: [], email: "", password: "", message: "", firebase_login: false, firebase_token_id: "", data: null
+                , course_list: null}
 
     componentDidMount() {
         // fetch('/users')
@@ -15,19 +16,94 @@ class App extends Component {
         //     .then(users => this.setState({ users }));
     }
 
+    print_firebase_logs = () =>{
+        axios.post('/users/read_all_data', {access_token: this.state.firebase_token_id })
+             .then(res=> {
+                 if (res.data.code === 0){
+                     console.log(res.data);
+                    this.setState({data: JSON.stringify(res.data.data)})
+                 }
+             })
+    };
+
+    erase_data = () =>{
+        this.setState({data: null})
+    }
+
+    get_student_emails = (c) =>{
+        axios.post('/users/read_specific_course', {access_token: this.state.googleClassroomToken, course_id: c.id,
+                                                    course_name: c.name})
+            .then(res => {
+                    console.log(res)
+            }).catch( e => {console.log(e)})
+    };
+
+
+    create_course_button = (course_list) => {
+        if (course_list === null){
+            return (<div/>)
+        }
+        return course_list.map(c => {
+                return (<button type="button" className="btn btn-secondary"
+                                onClick={() => this.get_student_emails(c)}> {c.name} </button>)
+            }
+        )
+    };
+
+    access_through_service_account = ()=>{
+        axios.post("/service_account/access").then(console.log)
+            .catch(console.log)
+    }
+
+
     googleResponse = (response) =>{
+        console.log(response)
+
+        this.setState(
+            {
+                googleClassroomToken: response.accessToken
+            }
+        )
+        this.get_student_emails({id:"18289786937"})
+        axios.post('/users/googlelogin', {access_token:this.state.googleClassroomToken})
+            .then(res =>{
+                console.log("Google login success" + res);
+                if (res.data.code === 0){
+                    this.setState({message: "google classroom log in success", course_list: res.data.course_list});
+                    console.log(res.data.course_list)
+
+                }
+                else{
+                    this.setState({message: "failure"})
+                }
+            })
+            .catch(e => console.log(e))
+    }
+
+    firebaseResponse = (response) =>{
         console.log(response);
 
-        // this.setState({google_access_token: response.accessToken});
-        this.setState({google_access_token: response.tokenId});
-        axios.post('/users/firebase_login', {access_token:this.state.google_access_token })
-            .then(res =>console.log(res))
+        // this.setState({firebase_token_id: response.accessToken});
+        this.setState({firebase_token_id: response.tokenId});
+        axios.post('/users/firebase_login', {access_token:this.state.firebase_token_id })
+            .then(res =>{
+                console.log(res)
+
+                if (res.data.code === 0){
+                    this.setState({message: "firebase log in success", firebase_login: true})
+                    }
+                else{
+                    this.setState({message: "failure"})
+                }
+
+
+            })
             .catch(e => console.log(e));
         // axios.get('/users')
         //     .then((res) => console.log(res));
-        console.log(this.state.google_access_token)
+        console.log(this.state.firebase_token_id)
         // axios.get("https://classroom.googleapis.com/v1/courses", {headers:
-        //         {"Application": "Bearer " + this.state.google_access_token}})
+        //         {"Application": "Bearer " + this.state.firebase_token_id}})
         //     .then(e=> console.log(e))
 
     }
@@ -45,45 +121,37 @@ class App extends Component {
         e.preventDefault()
     }
 
-
-
     render() {
         return (
             <div className="App">
-                {/*<h1>Google Class Login</h1>*/}
-                {/*<div className="container">*/}
-                    {/*<div className="row justify-content-md-center">*/}
-                    {/*<div className="col-sm"/>*/}
-                    {/*<div className="col-sm">*/}
-                        {/*<form onSubmit={this.handleSubmit}>*/}
-                            {/*<div className="form-group">*/}
-                                {/*<label htmlFor="exampleInputEmail1">Email address</label>*/}
-                                {/*<input type="email" className="form-control" id="exampleInputEmail1"*/}
-                                       {/*aria-describedby="emailHelp" placeholder="Enter email"*/}
-                                       {/*onChange={this.handleEmailChange} value={this.state.email}/>*/}
-                                    {/*<small id="emailHelp" className="form-text text-muted">We'll never share your email with*/}
-                                        {/*anyone else.*/}
-                                    {/*</small>*/}
-                            {/*</div>*/}
-                            {/*<div className="form-group">*/}
-                                {/*<label htmlFor="exampleInputPassword1">Password</label>*/}
-                                {/*<input type="password" className="form-control" id="exampleInputPassword1"*/}
-                                       {/*placeholder="Password" value={this.state.password}*/}
-                                       {/*onChange={this.handlePasswordChange}  />*/}
-                            {/*</div>*/}
-                            {/*<button type="submit" className="btn btn-primary">Submit</button>*/}
-                        {/*</form>*/}
-                    {/*</div>*/}
-                    {/*<div className="col-sm"/>*/}
-                    {/*</div>*/}
-                {/*</div>*/}
 
                 <GoogleLogin
-                    clientId="908046556011-o4ms5q3maam2et2ft8vhjj769ec2spbm.apps.googleusercontent.com"
+                    clientId="908046556011-80kbve0btf4nnn1o4vd010a0ag59tfj5.apps.googleusercontent.com"
                     scope="https://www.googleapis.com/auth/firebase"
+                    onSuccess={this.firebaseResponse}
+                    onFailure={this.firebaseResponse}
+                >  Firebase Login </GoogleLogin>
+
+
+                <GoogleLogin
+                    clientId="908046556011-80kbve0btf4nnn1o4vd010a0ag59tfj5.apps.googleusercontent.com"
+                    // scope="https://www.googleapis.com/auth/classroom.courses.readonly"
+                    scope = "https://www.googleapis.com/auth/classroom.courses
+                    https://www.googleapis.com/auth/classroom.rosters https://www.googleapis.com/auth/classroom.profile.emails"
                     onSuccess={this.googleResponse}
                     onFailure={this.googleResponse}
-                >  </GoogleLogin>
+                >  Google classroom Login </GoogleLogin>
+
+                <button type="button" className="btn btn-primary" onClick={this.access_through_service_account}> Service account login</button>
+
+                {  this.state.message !== "" ? <div className="alert alert-primary" role="alert"> {this.state.message } </div>  : <div/> }
+                {this.create_course_button(this.state.course_list)}
+                <button type="button" className="btn btn-primary" onClick={this.print_firebase_logs}> Read data </button>
+                <button type="button" className="btn btn-secondary" onClick={this.erase_data}> Erase data </button>
+                <div className="alert alert-primary" role="alert">
+                    {this.state.data === null? "No data" : this.state.data}
+                </div>
+
             </div>
         );
     }
