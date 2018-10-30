@@ -1,4 +1,4 @@
-##Setting up and running the app: 
+## Setting up and running the app: 
 
 To run the server, open a terminal and then   
 **cd react-backend**   
