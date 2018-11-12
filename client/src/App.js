@@ -4,11 +4,24 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import axios from 'axios'
 import { GoogleLogin } from 'react-google-login';
+import firebase from 'firebase';
+import ResearcherDashboard from './researcher_dashboard'
+import 'semantic-ui-css/semantic.min.css';
+import {Container} from 'semantic-ui-react'
 
+let config = {
+        apiKey: "AIzaSyAbY4nV71yiRKOo83KAv0c2xm-IV5fmH6k",
+        authDomain: "test-pfacs.firebaseapp.com",
+        databaseURL: "https://test-pfacs.firebaseio.com",
+        projectId: "test-pfacs",
+        storageBucket: "test-pfacs.appspot.com",
+        messagingSenderId: "908046556011"
+    };
+firebase.initializeApp(config);
 
 class App extends Component {
-    state = {users: [], email: "", password: "", message: "", firebase_login: false, firebase_token_id: "", data: null
-                , course_list: null}
+    state = {user: null, firebase_credential: null, email: "", password: "", message: "", firebase_login: false, firebase_token_id: "", data: {}
+                , course_list: null, failure: false }
 
     componentDidMount() {
         // fetch('/users')
@@ -17,13 +30,28 @@ class App extends Component {
     }
 
     print_firebase_logs = () =>{
-        axios.post('/users/read_all_data', {access_token: this.state.firebase_token_id })
-             .then(res=> {
-                 if (res.data.code === 0){
-                     console.log(res.data);
-                    this.setState({data: JSON.stringify(res.data.data)})
-                 }
-             })
+        // axios.post('/users/read_all_data', {access_token: this.state.firebase_token_id })
+        //      .then(res=> {
+        //          if (res.data.code === 0){
+        //              console.log(res.data);
+        //             this.setState({data: JSON.stringify(res.data.data)})
+        //          }
+        //      })
+        console.log("getting firebase log")
+        // let ref = firebase.database().ref(`/users/${firebase.auth().currentUser.uid}`);
+        let ref = firebase.database().ref(`/users/`).limitToFirst(4);
+        ref.on("value", snapshot =>{
+                let data = snapshot.val();
+                console.log(data);
+                this.setState({data: data})
+                // res.json({code: 0, data: snapshot.val()})
+            },
+            error => {
+                console.log("there is an error: " + error)
+                // res.json({code:1})
+            }
+
+        )
     };
 
     erase_data = () =>{
@@ -71,7 +99,6 @@ class App extends Component {
                 if (res.data.code === 0){
                     this.setState({message: "google classroom log in success", course_list: res.data.course_list});
                     console.log(res.data.course_list)
-
                 }
                 else{
                     this.setState({message: "failure"})
@@ -84,24 +111,82 @@ class App extends Component {
         console.log(response);
 
         // this.setState({firebase_token_id: response.accessToken});
-        this.setState({firebase_token_id: response.tokenId});
-        axios.post('/users/firebase_login', {access_token:this.state.firebase_token_id })
-            .then(res =>{
-                console.log(res)
-
-                if (res.data.code === 0){
-                    this.setState({message: "firebase log in success", firebase_login: true})
-                    }
-                else{
-                    this.setState({message: "failure"})
-                }
+        this.setState({firebase_token_id: response.tokenId, user: response, email: response.profileObj.email});
 
 
-            })
-            .catch(e => console.log(e));
-        // axios.get('/users')
+        let credential = firebase.auth.GoogleAuthProvider.credential(response.tokenId);
+        console.log("hello")
+        try {
+            firebase.auth().signInAndRetrieveDataWithCredential(credential)
+                .then(credential => {
+                    console.log("getting credential")
+                    console.log(credential.user.uid);
+                    // set up uid
+                    this.setState({firebase_credential:credential});
+                    axios.post('/admin_test/set_claim', {idToken: firebase.auth().currentUser.getIdToken()})
+                        .then(res=>{
+                        console.log("setting claim response")
+                        if (res.data.status === "success"){
+                            // firebase.auth().currentUser.getIdToken(true)
+                            //     .then(token_id => {
+                            //         this.setState({firebase_token_id: token_id});
+                            //         console.log("the token has been refreshed")
+                            //         console.log(firebase.auth().currentUser)
+                            //
+                            //     })
+                            //     .catch(console.log);
+
+                            firebase.auth().currentUser.getIdTokenResult(true)
+                                .then(token => console.log(token))
+                            this.setState({failure: false})
+
+                        }else{
+                            firebase.auth().currentUser.getIdTokenResult(true)
+                                .then(token => console.log(token))
+                            this.setState({failure: true})
+
+
+                            console.log(res.data.status)
+                        }
+                    })
+                })
+                .catch(function(error) {
+                    // Handle Errors here.
+                    let errorCode = error.code;
+                    let errorMessage = error.message;
+                    // The email of the user's account used.
+                    let email = error.email;
+                    // The firebase.auth.AuthCredential type that was used.
+                    let credential = error.credential;
+
+                    // ...
+                    console.log("error: " + error);
+                });
+        }catch (e) {
+            console.log(e)
+        }
+
+
+
+
+        //
+        // axios.post('/users/firebase_login', {access_token:this.state.firebase_token_id})
+        //     .then(res =>{
+        //         console.log(res)
+        //
+        //         if (res.data.code === 0){
+        //             this.setState({message: "firebase log in success", firebase_login: true})
+        //             }
+        //         else{
+        //             this.setState({message: "failure"})
+        //         }
+        //
+        //
+        //     })
+        //     .catch(e => console.log(e));
+        // // axios.get('/users')
         //     .then((res) => console.log(res));
-        console.log(this.state.firebase_token_id)
+        // console.log(this.state.firebase_token_id)
         // axios.get("https://classroom.googleapis.com/v1/courses", {headers:
         //         {"Application": "Bearer " + this.state.firebase_token_id}})
         //     .then(e=> console.log(e))
@@ -133,14 +218,14 @@ class App extends Component {
                 >  Firebase Login </GoogleLogin>
 
 
-                <GoogleLogin
-                    clientId="908046556011-80kbve0btf4nnn1o4vd010a0ag59tfj5.apps.googleusercontent.com"
-                    // scope="https://www.googleapis.com/auth/classroom.courses.readonly"
-                    scope = "https://www.googleapis.com/auth/classroom.courses
-                    https://www.googleapis.com/auth/classroom.rosters https://www.googleapis.com/auth/classroom.profile.emails"
-                    onSuccess={this.googleResponse}
-                    onFailure={this.googleResponse}
-                >  Google classroom Login </GoogleLogin>
+                {/*<GoogleLogin*/}
+                    {/*clientId="908046556011-80kbve0btf4nnn1o4vd010a0ag59tfj5.apps.googleusercontent.com"*/}
+                    {/*// scope="https://www.googleapis.com/auth/classroom.courses.readonly"*/}
+                    {/*scope = "https://www.googleapis.com/auth/classroom.courses*/}
+                    {/*https://www.googleapis.com/auth/classroom.rosters https://www.googleapis.com/auth/classroom.profile.emails"*/}
+                    {/*onSuccess={this.googleResponse}*/}
+                    {/*onFailure={this.googleResponse}*/}
+                {/*>  Google classroom Login </GoogleLogin>*/}
 
                 <button type="button" className="btn btn-primary" onClick={this.access_through_service_account}> Service account login</button>
 
@@ -148,11 +233,24 @@ class App extends Component {
                 {this.create_course_button(this.state.course_list)}
                 <button type="button" className="btn btn-primary" onClick={this.print_firebase_logs}> Read data </button>
                 <button type="button" className="btn btn-secondary" onClick={this.erase_data}> Erase data </button>
-                <div className="alert alert-primary" role="alert">
-                    {this.state.data === null? "No data" : this.state.data}
-                </div>
 
+                <Container  text> {
+                    this.state.email === "" ?
+                        "No log in right now" :
+                        `Current user: ${this.state.email}`
+
+                }  </Container>
+
+                { this.state.failure ? <Container text> This account is not a research account  </Container> : <div></div> }
+
+                <div className="alert alert-primary" role="alert">
+                    {
+                        Object.keys(this.state.data).length === 0 ? "No data" : "data received"
+                    }
+                </div>
+                <ResearcherDashboard data={this.state.data}/>
             </div>
+
         );
     }
 }

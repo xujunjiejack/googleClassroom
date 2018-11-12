@@ -157,7 +157,8 @@ router.post('/read_all_data', (req, res, next) =>{
     verify(access_token)
         .then(()=>{
             console.log("accessing data")
-            let ref = firebase.database().ref(`/users/${credential_uid}`).limitToLast(10);
+            // let ref = firebase.database().ref(`/users/${credential_uid}`).limitToLast(10);
+            let ref = firebase.database().ref(`/users/`).limitToLast(10);
             ref.on("value", snapshot =>{
                     console.log(snapshot);
                     res.json({code: 0, data: snapshot.val()})
