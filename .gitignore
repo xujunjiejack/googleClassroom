@@ -59,3 +59,6 @@ typings/
 
 # next.js build output
 .next
+routes/test-pfacs-d5b5011f97c2.json
+routes/configuration.js
+routes/google_class_api.js
