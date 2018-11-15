@@ -4,7 +4,7 @@ const {google} = require('googleapis');
 
 const axios = require('axios');
 
-let access_token= "ya29.GlwqBqU4qlaf7vhatxmSlUFVenulIhOqIwVlFUWYLtnZUzenQa8Nco-ziKmXxUVVuQunj8FlTPzEzIQsDon8Tswfb0PknjmSQTO6xCbyE5GkDzwjWflznopdJLBKNw"
+let access_token= ""
 console.log("hello")
 
 let OAuth2 = google.auth.OAuth2;
