@@ -1,5 +1,3 @@
-<<<<<<< HEAD
-
 /node_modules/
 /client/node_modules/
 
@@ -90,4 +88,3 @@ typings/
 routes/test-pfacs-d5b5011f97c2.json
 routes/configuration.js
 routes/google_class_api.js
->>>>>>> e519652a74d8e6c31d18b3fefd29051d55a89a9d

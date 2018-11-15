@@ -1,10 +1,5 @@
 ## Setting up and running the app: 
-
-<<<<<<< HEAD
-To run the server, open a terminal and then   
-=======
 To run the server, open a terminal and then type in
->>>>>>> e519652a74d8e6c31d18b3fefd29051d55a89a9d
 **cd react-backend**   
 and then run   
 **npm install**  
