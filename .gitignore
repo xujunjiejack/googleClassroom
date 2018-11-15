@@ -21,3 +21,6 @@ yarn-error.log*
 /routes/configuration.js
 /routes/test-pfacs-d5b5011f97c2.json
 /routes/token.json
+
+/routes/*.zip
+*.zip
