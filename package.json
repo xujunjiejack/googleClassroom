@@ -19,7 +19,10 @@
     "debug": "~2.6.9",
     "express": "~4.16.0",
     "firebase": "^5.5.3",
+<<<<<<< HEAD
     "firebase-admin": "^6.1.0",
+=======
+>>>>>>> e519652a74d8e6c31d18b3fefd29051d55a89a9d
     "google-auth-library": "^2.0.0",
     "googleapis": "^27.0.0",
     "http-errors": "~1.6.2",

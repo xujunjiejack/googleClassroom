@@ -99,6 +99,7 @@ class App extends Component {
                 if (res.data.code === 0){
                     this.setState({message: "google classroom log in success", course_list: res.data.course_list});
                     console.log(res.data.course_list)
+
                 }
                 else{
                     this.setState({message: "failure"})
@@ -217,7 +218,6 @@ class App extends Component {
                     onFailure={this.firebaseResponse}
                 >  Firebase Login </GoogleLogin>
 
-
                 {/*<GoogleLogin*/}
                     {/*clientId="908046556011-80kbve0btf4nnn1o4vd010a0ag59tfj5.apps.googleusercontent.com"*/}
                     {/*// scope="https://www.googleapis.com/auth/classroom.courses.readonly"*/}
@@ -233,6 +233,7 @@ class App extends Component {
                 {this.create_course_button(this.state.course_list)}
                 <button type="button" className="btn btn-primary" onClick={this.print_firebase_logs}> Read data </button>
                 <button type="button" className="btn btn-secondary" onClick={this.erase_data}> Erase data </button>
+
 
                 <Container  text> {
                     this.state.email === "" ?
